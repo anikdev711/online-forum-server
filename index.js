@@ -26,6 +26,7 @@ async function run() {
     await client.connect();
 
     const userCollection = client.db("forumDb").collection("users");
+    const postCollection = client.db("forumDb").collection("posts");
 
 
 
@@ -60,6 +61,101 @@ async function run() {
       }
       const result = await userCollection.insertOne(user);
       res.send(result);
+    })
+
+    //post related
+
+    //post count
+    app.get('/posts/count/:email', async (req, res) => {
+      const userEmail = req.params.email;
+      // console.log(userEmail);
+      // const query = {
+      //   email: userEmail
+      // }
+      // const userPostsCount = await postCollection.countDocuments({query});
+      const userPostsCount = await postCollection.estimatedDocumentCount({ userEmail });
+      res.send({ userPostsCount })
+    })
+
+    //find all posts
+    app.get('/posts', async (req, res) => {
+      const result = await postCollection.find().toArray();
+      res.send(result);
+    })
+
+    //find specific user's  post
+    app.get('/posts/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = {
+        authorEmail: email
+      }
+      const result = await postCollection.find(query).toArray();
+      res.send(result);
+    })
+
+
+    //find specific post
+    app.get('/posts/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = {
+        _id: new ObjectId(id)
+      }
+      const result = await postCollection.findOne(query);
+      res.send(result)
+    })
+
+
+
+
+
+    //users posts
+    app.post('/posts', async (req, res) => {
+      const {
+        authorImage,
+        authorName,
+        authorEmail,
+        postTitle,
+        postDescription,
+        tag
+      } = req.body;
+      const result = await postCollection.insertOne({
+        authorImage,
+        authorName,
+        authorEmail,
+        postTitle,
+        postDescription,
+        tag,
+        upVote: 0,
+        downVote: 0
+      });
+      res.send(result);
+    })
+
+
+
+    //vote
+    app.post('/posts/vote', async (req, res) => {
+      const { userPostId, userVoteType } = req.body;
+      const query = {
+        _id: new ObjectId(userPostId)
+      }
+      const findPost = await postCollection.findOne(query);
+      if (!findPost) {
+        return res.status(404).send({ message: 'post not found' })
+      }
+
+      if (userVoteType === 'upVote') {
+        await postCollection.updateOne(query, { $inc: { upVote: 1 } });
+      }
+      else if (userVoteType === 'downVote') {
+        await postCollection.updateOne(query, { $inc: { downVote: 1 } });
+      }
+
+      res.send({ success: true });
+
+
+
+
     })
 
 
