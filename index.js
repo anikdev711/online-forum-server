@@ -69,11 +69,16 @@ async function run() {
     app.get('/posts/count/:email', async (req, res) => {
       const userEmail = req.params.email;
       // console.log(userEmail);
-      // const query = {
-      //   email: userEmail
-      // }
-      // const userPostsCount = await postCollection.countDocuments({query});
-      const userPostsCount = await postCollection.estimatedDocumentCount({ userEmail });
+
+      const query = {
+        authorEmail: userEmail
+      }
+
+      // console.log(query);
+      const userPostsCount = await postCollection.countDocuments(query);
+      // const userPostsCount = await postCollection.estimatedDocumentCount({ userEmail });
+      // const userPostsCount = await postCollection.estimatedDocumentCount(query);
+      // console.log(userPostsCount);
       res.send({ userPostsCount })
     })
 
@@ -118,6 +123,7 @@ async function run() {
         postDescription,
         tag
       } = req.body;
+      const postTime = new Date();
       const result = await postCollection.insertOne({
         authorImage,
         authorName,
@@ -126,7 +132,8 @@ async function run() {
         postDescription,
         tag,
         upVote: 0,
-        downVote: 0
+        downVote: 0,
+        postTime
       });
       res.send(result);
     })
@@ -156,6 +163,54 @@ async function run() {
 
 
 
+    })
+
+    //post comments
+
+    app.get('/posts/comments/:postId', async (req, res) => {
+      const postId = req.params.postId;
+      const query = {
+        _id: new ObjectId(postId)
+      }
+      const result = await postCollection.findOne(query);
+      res.send(result)
+    })
+
+
+
+
+
+    app.post('/posts/comments/:postId', async (req, res) => {
+      const postId = req.params.postId;
+      const {
+        commenterEmail,
+        userComment
+      } = req.body;
+      const commentTime = new Date();
+      const query = {
+        _id: new ObjectId(postId)
+      }
+      const result = await postCollection.updateOne(query, {
+        $push: {
+          comments: {
+            commenterEmail,
+            userComment,
+            commentTime
+          }
+        }
+      })
+      res.send(result)
+    })
+
+
+    //delete post
+    app.delete('/posts/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = {
+        _id: new ObjectId(id)
+      }
+      const result = await postCollection.deleteOne(query);
+      res.send(result)
     })
 
 
