@@ -27,6 +27,7 @@ async function run() {
 
     const userCollection = client.db("forumDb").collection("users");
     const postCollection = client.db("forumDb").collection("posts");
+    const reportCollection = client.db("forumDb").collection("reports");
 
 
 
@@ -271,6 +272,22 @@ async function run() {
       }
       const result = await postCollection.deleteOne(query);
       res.send(result)
+    })
+
+    //report related
+
+    app.get('/reports', async (req, res) => {
+      const result = await reportCollection.find().toArray();
+      res.send(result)
+    })
+
+
+
+    app.post('/reports', async (req, res) => {
+      const report = req.body;
+      const result = await reportCollection.insertOne(report);
+      res.send(result);
+
     })
 
 
