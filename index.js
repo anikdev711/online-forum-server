@@ -49,6 +49,48 @@ async function run() {
       res.send(result)
     })
 
+    //for admin only
+    app.get('/users/admin/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = {
+        email: email
+      }
+      const userOfForum = await userCollection.findOne(query);
+      let admin = false;
+      if (userOfForum) {
+        admin = userOfForum?.role === 'admin';
+      }
+      res.send({ admin });
+    })
+
+    //make admin
+
+    app.put('/users/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = {
+        _id: new ObjectId(id)
+      }
+      const options = { upsert: true };
+      const updateRoleOfUser = {
+        $set: {
+          role: 'admin'
+        }
+      }
+
+      const result = await userCollection.updateOne(filter, updateRoleOfUser, options);
+      res.send(result)
+
+
+    })
+
+    //delete user
+    
+
+
+
+
+
+
     //post operation
     app.post('/users', async (req, res) => {
       const user = req.body;
@@ -62,6 +104,17 @@ async function run() {
       const result = await userCollection.insertOne(user);
       res.send(result);
     })
+
+
+
+
+
+
+
+
+
+
+
 
     //post related
 
