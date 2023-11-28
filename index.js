@@ -28,6 +28,7 @@ async function run() {
     const userCollection = client.db("forumDb").collection("users");
     const postCollection = client.db("forumDb").collection("posts");
     const reportCollection = client.db("forumDb").collection("reports");
+    const announcementCollection = client.db("forumDb").collection("announcements");
 
 
 
@@ -288,6 +289,33 @@ async function run() {
       const result = await reportCollection.insertOne(report);
       res.send(result);
 
+    })
+
+    //announcements
+    app.get('/announcements', async (req, res) => {
+      const result = await announcementCollection.find().toArray();
+      res.send(result)
+    })
+
+    // app.get('/announcements/count/:email', async (req, res) => {
+    //   const userEmail = req.params.email;
+    //   const query = {
+    //     authorEmail: userEmail
+    //   }
+    //   const announcementCount = await announcementCollection.countDocuments(query);
+    //   res.send({ announcementCount })
+    // })
+
+    app.get('/announcements/count', async (req, res) => {
+
+      const announcementCount = await announcementCollection.countDocuments();
+      res.send({ announcementCount })
+    })
+
+    app.post('/announcements', async (req, res) => {
+      const announcement = req.body;
+      const result = await announcementCollection.insertOne(announcement);
+      res.send(result);
     })
 
 
