@@ -2,8 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 require('dotenv').config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -345,6 +345,23 @@ async function run() {
     })
 
     //payment
+
+    app.get('/payments', async (req, res) => {
+      const result = await paymentCollection.find().toArray();
+      res.send(result);
+    })
+
+    app.get('/payments/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = {
+        email: email
+      }
+      const result = await paymentCollection.findOne(query);
+      res.send(result);
+    })
+
+
+
     app.post('/create-payment-intent', async (req, res) => {
       const { price } = req.body;
       console.log(price);
