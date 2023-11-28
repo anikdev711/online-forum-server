@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -29,7 +31,31 @@ async function run() {
     const postCollection = client.db("forumDb").collection("posts");
     const reportCollection = client.db("forumDb").collection("reports");
     const announcementCollection = client.db("forumDb").collection("announcements");
+    const paymentCollection = client.db("forumDb").collection("payments");
 
+
+
+    //jwt related
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+      res.send({ token });
+    })
+
+    const verifyToken = (req, res, next) => {
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: 'unauthorized access' })
+      }
+      const token = req.headers.authorization.split(' ')[1];
+      console.log(token);
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: 'unauthorized access' })
+        }
+        req.decoded = decoded;
+        next();
+      });
+    }
 
 
     //user related
@@ -317,6 +343,55 @@ async function run() {
       const result = await announcementCollection.insertOne(announcement);
       res.send(result);
     })
+
+    //payment
+    app.post('/create-payment-intent', async (req, res) => {
+      const { price } = req.body;
+      console.log(price);
+      const amount = parseInt(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ['card']
+      })
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    app.post('/payments', async (req, res) => {
+      const payment = req.body;
+      const paymentResult = await paymentCollection.insertOne(payment);
+      res.send({ paymentResult })
+    })
+
+
+
+
+    // app.post("/payments", async (req, res) => {
+    //   let { amount, id } = req.body
+    //   try {
+    //     const payment = await stripe.paymentIntents.create({
+    //       amount,
+    //       currency: "USD",
+    //       description: "Byte Talks",
+    //       payment_method: id,
+    //       confirm: true
+    //     })
+    //     console.log("Payment", payment)
+    //     res.send({
+    //       message: "Payment successful",
+    //       success: true
+    //     })
+    //   } catch (error) {
+    //     console.log("Error", error)
+    //     res.send({
+    //       message: "Payment failed",
+    //       success: false
+    //     })
+    //   }
+    // })
+
 
 
 
