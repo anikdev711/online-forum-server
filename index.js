@@ -77,6 +77,11 @@ async function run() {
       res.send(result)
     })
 
+
+
+
+
+
     //for admin only
     app.get('/users/admin/:email', async (req, res) => {
       const email = req.params.email;
@@ -110,6 +115,28 @@ async function run() {
 
 
     })
+
+    //update user badge
+
+    app.patch('/users/:email', async (req, res) => {
+      const email = req.params.email;
+      const filter = {
+        email: email
+      }
+      const updateBadge = {
+        $set: {
+          badge: 'gold'
+        }
+      }
+      const result = await userCollection.updateOne(filter, updateBadge);
+      res.send(result);
+    })
+
+
+
+
+
+
 
     //delete user
     app.delete('/users/:id', async (req, res) => {
