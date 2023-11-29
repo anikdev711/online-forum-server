@@ -67,6 +67,25 @@ async function run() {
       res.send(result);
     })
 
+    //pagination of user 
+    // app.get('/user/first', async (req, res) => {
+
+    //   let queryObj = {};
+
+    //   const page = Number(req.query.page);
+    //   const limit = Number(req.query.limit);
+    //   const skip = (page - 1) * limit;
+
+    //   const cursor = userCollection.find(queryObj).skip(skip).limit(limit)
+    //   const result = await cursor.toArray();
+    //   const total = await userCollection.countDocuments();
+    //   res.send({ total, result });
+    // })
+
+
+
+
+
     //get specific user
     app.get('/users/:email', async (req, res) => {
       const email = req.params.email;
@@ -197,11 +216,64 @@ async function run() {
       res.send({ userPostsCount })
     })
 
-    //find all posts
+
+
+    // find all posts
     app.get('/posts', async (req, res) => {
       const result = await postCollection.find().toArray();
       res.send(result);
     })
+
+
+    //filtering, pagination, sorting
+    app.get('/posts/first', async (req, res) => {
+      let queryObj = {};
+      let sortObj = {};
+      // console.log(req.query.tag);
+      const tag = req.query.tag;
+      // const sortField = await postCollection.aggregate([
+      //   {
+      //     $addFields: {
+      //       voteDifference: { $subtract: ['$upVote', '$downVote'] }
+      //     }
+      //   },
+      //   {
+      //     $sort: { voteDifference: -1 }
+      //   }
+      // ]).toArray();
+      // const sortOrder = req.query.sortOrder;
+      // const sortField = req.query.sortField;
+      // const sortOrder = req.query.sortOrder;
+
+
+      const page = Number(req.query.page);
+      const limit = Number(req.query.limit);
+      const skip = (page - 1) * limit;
+
+      if (tag) {
+        queryObj.tag = tag;
+      }
+
+      // if(sortField && sortOrder){
+      //   sortObj[sortField] = sortOrder;
+      // }
+      // if(sortField){
+      //   sortObj[sortField] = sortOrder;
+      // }
+
+      // const cursor = postCollection.find(queryObj).skip(skip).limit(limit).sort(sortObj);
+      const cursor = postCollection.find(queryObj).skip(skip).limit(limit)
+      const result = await cursor.toArray();
+      const total = await postCollection.countDocuments();
+      res.send({ total, result });
+
+
+    })
+
+
+
+
+
 
     //find specific user's  post
     app.get('/posts/:email', async (req, res) => {
