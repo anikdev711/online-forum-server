@@ -32,6 +32,7 @@ async function run() {
     const reportCollection = client.db("forumDb").collection("reports");
     const announcementCollection = client.db("forumDb").collection("announcements");
     const paymentCollection = client.db("forumDb").collection("payments");
+    const tagCollection = client.db("forumDb").collection("tags");
 
 
 
@@ -484,29 +485,18 @@ async function run() {
 
 
 
-    // app.post("/payments", async (req, res) => {
-    //   let { amount, id } = req.body
-    //   try {
-    //     const payment = await stripe.paymentIntents.create({
-    //       amount,
-    //       currency: "USD",
-    //       description: "Byte Talks",
-    //       payment_method: id,
-    //       confirm: true
-    //     })
-    //     console.log("Payment", payment)
-    //     res.send({
-    //       message: "Payment successful",
-    //       success: true
-    //     })
-    //   } catch (error) {
-    //     console.log("Error", error)
-    //     res.send({
-    //       message: "Payment failed",
-    //       success: false
-    //     })
-    //   }
-    // })
+    //tags related
+
+    app.get('/tags', async (req, res) => {
+      const result = await tagCollection.find().toArray();
+      res.send(result);
+    })
+
+    app.post('/tags', async (req, res) => {
+      const tag = req.body;
+      const result = await tagCollection.insertOne(tag);
+      res.send(result);
+    })
 
 
 
